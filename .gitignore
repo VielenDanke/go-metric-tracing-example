@@ -3,6 +3,8 @@
 *.dll
 *.so
 *.dylib
+.idea
+*.iml
 
 *.test
 
