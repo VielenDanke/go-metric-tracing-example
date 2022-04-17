@@ -46,7 +46,7 @@ func main() {
 
 	h := handler.NewUserHandler(svc)
 
-	mux.HandleFunc("/api/v1/users", trace.HTTPHandlerFunc(h.FindAll(), "controller_user_find_all"))
+	mux.HandleFunc("/api/v1/users", trace.HTTPHandlerFunc(h.FindAll, "controller_user_find_all"))
 
 	log.Fatalln(http.ListenAndServe(":8080", mux))
 }
