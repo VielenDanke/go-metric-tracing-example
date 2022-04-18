@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"github.com/vielendanke/opentracing-example/internal/pkg/common"
 	"github.com/vielendanke/opentracing-example/internal/pkg/trace"
 	"github.com/vielendanke/opentracing-example/internal/users/model"
 	"log"
@@ -37,6 +38,7 @@ func (u sqlUserStorage) FindAll(ctx context.Context) ([]model.User, error) {
 	rows, rowsErr := u.db.QueryContext(childCtx, "select u.id, u.username, u.email from users u")
 
 	if rowsErr != nil {
+		common.LogError(rowsErr)
 		trace.AddSpanError(span, rowsErr)
 		trace.FailSpan(span, "Database is not available")
 		return nil, rowsErr
@@ -62,7 +64,7 @@ func (u sqlUserStorage) Save(ctx context.Context, user model.User) (int, error) 
 		ReadOnly:  false,
 	})
 	if txErr != nil {
-		log.Println(txErr)
+		common.LogError(txErr)
 		trace.AddSpanError(span, txErr)
 		trace.FailSpan(span, "Transaction failed to start")
 		return 0, txErr
@@ -71,11 +73,12 @@ func (u sqlUserStorage) Save(ctx context.Context, user model.User) (int, error) 
 	row := tx.QueryRowContext(childCtx, "insert into users(username, email) values($1, $2) returning id",
 		user.Username, user.Email)
 	if scErr := row.Scan(&id); scErr != nil {
-		log.Println(scErr)
+		common.LogError(scErr, tx.Rollback())
 		trace.AddSpanError(span, txErr)
 		trace.FailSpan(span, "Failed to scan ID of user")
 		return 0, scErr
 	}
+	common.LogError(tx.Commit())
 	return id, nil
 }
 
