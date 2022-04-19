@@ -7,10 +7,10 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    {{- range $podInfo := .Values.deployment.containerPorts }}
+    {{- range $serviceInfo := .Values.service.servicePorts }}
     - name: $serviceInfo.name
       targetPort: $serviceInfo.targetPort
-      port: $serviceInfo.port
+      port: {{ int $serviceInfo.port }}
       protocol: $serviceInfo.protocol
     {{- end}}
   selector:

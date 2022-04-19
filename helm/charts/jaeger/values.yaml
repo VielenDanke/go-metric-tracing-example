@@ -58,14 +58,13 @@ deployment:
     }
   ]
 
-resources: {
+resources:
   limits:
     cpu: 150m
     memory: 256Mi
-    requests:
-      cpi: 100m
-      memory: 128Mi
-}
+  requests:
+    cpi: 100m
+    memory: 128Mi
 
 autoscaling:
   enabled: false
