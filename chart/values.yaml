@@ -23,6 +23,16 @@ service:
   type: ClusterIP
   port: 9090
 
+jaeger:
+  collector:
+    url: 'http://simplest-agent:14268/api/traces'
+
+db:
+  url: 'host=localhost port=5432 user=user password=password sslmode=disable dbname=users'
+  username: user
+  password: password
+  databaseName: users
+
 ingress:
   enabled: true
   className: ""

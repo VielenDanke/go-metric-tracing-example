@@ -32,11 +32,11 @@ spec:
           image: "postgres:latest"
           env:
             - name: POSTGRES_USER
-              value: user
+              value: {{ .Values.db.username }}
             - name: POSTGRES_PASSWORD
-              value: password
+              value: {{ .Values.db.password }}
             - name: POSTGRES_DB
-              value: users
+              value: {{ .Values.db.databaseName }}
           ports:
             - containerPort: 5432
         - name: {{ .Chart.Name }}
@@ -46,9 +46,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: JAEGER_ENDPOINT
-              value: 'http://simplest-agent:14268/api/traces'
+              value: {{ .Values.jaeger.collector.url }}
             - name: DATABASE_URL
-              value: 'host=localhost port=5432 user=user password=password sslmode=disable dbname=users'
+              value: {{ .Values.db.url }}
           ports:
             - name: http
               containerPort: 9090
