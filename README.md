@@ -10,3 +10,4 @@ Jaeger + Prometheus + Kubernetes + Application
 5. Build image to minikube (minikube build image -t users:1.0.0 .)  
 6. Install application to minikube (helm install users -f chart/values.yaml chart/)
 7. Modify /etc/hosts file (Add _minikube ip_ to file and associate it with users.local)  
+8. Forward Jaeger UI to local port (kubectl port-forward -n "namespace" "pod-name" 9090:16686)  
