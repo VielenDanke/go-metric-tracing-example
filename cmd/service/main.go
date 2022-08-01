@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"github.com/vielendanke/opentracing-example/internal/pkg/sql"
+	"time"
+
 	_ "github.com/lib/pq"
 	"github.com/vielendanke/opentracing-example/internal/pkg/common"
-	"github.com/vielendanke/opentracing-example/internal/pkg/sql"
 	"github.com/vielendanke/opentracing-example/internal/pkg/trace"
 	"github.com/vielendanke/opentracing-example/internal/users/handler"
 	"github.com/vielendanke/opentracing-example/internal/users/service"
@@ -15,29 +17,35 @@ import (
 )
 
 func main() {
+	time.Sleep(5 * time.Second)
+
 	cfg := trace.ProviderConfig{
-		JaegerEndpoint: "",
-		ServiceName:    "service",
+		JaegerEndpoint: os.Getenv("JAEGER_ENDPOINT"),
+		ServiceName:    "users",
 		ServiceVersion: "1.0.0",
-		Environment:    "env",
+		Environment:    "integ",
 		Disabled:       false,
 	}
-	exporter, exporterErr := trace.NewStdOutExporter(os.Stdout)
+	exporter, exporterErr := trace.NewJaegerExporter(os.Getenv("JAEGER_ENDPOINT"))
 	if exporterErr != nil {
-		log.Fatalln(exporterErr)
+		log.Println(exporterErr)
 	}
 	resource := trace.NewResource(cfg)
 	pvd, providerErr := trace.NewProvider(cfg, exporter, resource)
 	if providerErr != nil {
-		log.Fatalln(providerErr)
+		log.Println(providerErr)
 	}
 	defer pvd.Close(context.Background())
 
-	conn, connErr := sql.OpenSQLConnection(
-		"host=localhost port=5432 user=user password=password sslmode=disable dbname=users")
+	conn, connErr := sql.OpenSQLConnection(os.Getenv("DATABASE_URL"))
 
 	if connErr != nil {
-		log.Fatalln(connErr)
+		log.Println(connErr)
+	}
+	migrErr := sql.SetupData(conn)
+
+	if migrErr != nil {
+		log.Println(migrErr)
 	}
 	userRepo := storage.NewUserRepository(conn)
 
@@ -51,5 +59,5 @@ func main() {
 	mux.HandleFunc("/live", common.LiveReadyProbe)
 	mux.HandleFunc("/ready", common.LiveReadyProbe)
 
-	log.Fatalln(http.ListenAndServe(":8080", mux))
+	log.Fatalln(http.ListenAndServe(":9090", mux))
 }

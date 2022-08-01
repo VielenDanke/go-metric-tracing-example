@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /users ./cmd/service
+RUN env GOOS=linux GARCH=amd64 CGO_ENABLED=0 go build -o /users ./cmd/service
 
 FROM alpine:latest
 
@@ -16,6 +16,6 @@ WORKDIR /
 
 COPY --from=build /users /users
 
-EXPOSE 8080
+EXPOSE 9090
 
-ENTRYPOINT ["/users"]
+ENTRYPOINT ["./users"]
