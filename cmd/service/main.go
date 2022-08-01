@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/gorilla/mux"
 	"github.com/vielendanke/opentracing-example/internal/pkg/sql"
 	"time"
 
@@ -51,13 +52,14 @@ func main() {
 
 	svc := service.NewUserService(userRepo)
 
-	mux := http.DefaultServeMux
+	router := mux.NewRouter()
 
 	h := handler.NewUserHandler(svc)
 
-	mux.HandleFunc("/api/v1/users", trace.HTTPHandlerFunc(h.FindAll, "controller_user_find_all"))
-	mux.HandleFunc("/live", common.LiveReadyProbe)
-	mux.HandleFunc("/ready", common.LiveReadyProbe)
+	router.HandleFunc("/api/v1/users", trace.HTTPHandlerFunc(h.FindAll, "controller_user_find_all")).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/users", trace.HTTPHandlerFunc(h.Save, "controller_user_save")).Methods(http.MethodPost)
+	router.HandleFunc("/live", common.LiveReadyProbe)
+	router.HandleFunc("/ready", common.LiveReadyProbe)
 
-	log.Fatalln(http.ListenAndServe(":9090", mux))
+	log.Fatalln(http.ListenAndServe(":9090", router))
 }

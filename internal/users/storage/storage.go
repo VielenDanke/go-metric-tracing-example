@@ -59,6 +59,8 @@ func (u sqlUserStorage) FindAll(ctx context.Context) ([]model.User, error) {
 func (u sqlUserStorage) Save(ctx context.Context, user model.User) (int, error) {
 	childCtx, span := trace.NewSpanFromTracer(ctx, tracer, "repository_user_save")
 
+	defer span.End()
+
 	tx, txErr := u.db.BeginTx(ctx, &sql.TxOptions{
 		Isolation: sql.LevelReadCommitted,
 		ReadOnly:  false,

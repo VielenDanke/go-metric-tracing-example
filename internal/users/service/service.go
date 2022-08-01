@@ -11,6 +11,7 @@ var tracer = trace.NewTracer("user_service")
 
 type UserService interface {
 	FindAll(ctx context.Context) ([]model.User, error)
+	Save(ctx context.Context, user model.User) (int, error)
 }
 
 type userServiceImpl struct {
@@ -19,6 +20,14 @@ type userServiceImpl struct {
 
 func NewUserService(userRepo storage.UserStorage) UserService {
 	return userServiceImpl{userRepository: userRepo}
+}
+
+func (u userServiceImpl) Save(ctx context.Context, user model.User) (int, error) {
+	childCts, span := trace.NewSpanFromTracer(ctx, tracer, "service_user_save")
+
+	defer span.End()
+
+	return u.userRepository.Save(childCts, user)
 }
 
 func (u userServiceImpl) FindAll(ctx context.Context) ([]model.User, error) {
