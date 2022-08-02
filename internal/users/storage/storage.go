@@ -40,7 +40,6 @@ func (u sqlUserStorage) FindAll(ctx context.Context) ([]model.User, error) {
 	if rowsErr != nil {
 		common.LogError(rowsErr)
 		trace.AddSpanError(span, rowsErr)
-		trace.FailSpan(span, "Database is not available")
 		return nil, rowsErr
 	}
 	allUsers := make([]model.User, 0)
@@ -68,7 +67,6 @@ func (u sqlUserStorage) Save(ctx context.Context, user model.User) (int, error) 
 	if txErr != nil {
 		common.LogError(txErr)
 		trace.AddSpanError(span, txErr)
-		trace.FailSpan(span, "Transaction failed to start")
 		return 0, txErr
 	}
 	var id int
@@ -77,7 +75,6 @@ func (u sqlUserStorage) Save(ctx context.Context, user model.User) (int, error) 
 	if scErr := row.Scan(&id); scErr != nil {
 		common.LogError(scErr, tx.Rollback())
 		trace.AddSpanError(span, txErr)
-		trace.FailSpan(span, "Failed to scan ID of user")
 		return 0, scErr
 	}
 	common.LogError(tx.Commit())
@@ -85,11 +82,40 @@ func (u sqlUserStorage) Save(ctx context.Context, user model.User) (int, error) 
 }
 
 func (u sqlUserStorage) FindByID(ctx context.Context, id int) (model.User, error) {
-	//TODO implement me
-	panic("implement me")
+	childCtx, span := trace.NewSpanFromTracer(ctx, tracer, "repository_user_save")
+
+	defer span.End()
+
+	var user model.User
+
+	if scanErr := u.db.QueryRowContext(childCtx, "select u.id, u.username, u.email from users u where u.id=$1", id).
+		Scan(&user.ID, &user.Username, &user.Email); scanErr != nil {
+		common.LogError(scanErr)
+		trace.AddSpanError(span, scanErr)
+		return user, scanErr
+	}
+	return user, nil
 }
 
 func (u sqlUserStorage) Update(ctx context.Context, user model.User) error {
-	//TODO implement me
-	panic("implement me")
+	childCtx, span := trace.NewSpanFromTracer(ctx, tracer, "repository_user_update")
+
+	defer span.End()
+
+	tx, txErr := u.db.BeginTx(childCtx, &sql.TxOptions{
+		Isolation: sql.LevelReadCommitted,
+		ReadOnly:  false,
+	})
+	if txErr != nil {
+		common.LogError(txErr)
+		trace.AddSpanError(span, txErr)
+		return txErr
+	}
+	if _, execErr := tx.Exec("update users set username=$1, email=$2 where id=$3", user.Username, user.Email, user.ID); execErr != nil {
+		common.LogError(execErr)
+		common.LogError(tx.Rollback())
+		trace.AddSpanError(span, execErr)
+		return execErr
+	}
+	return tx.Commit()
 }

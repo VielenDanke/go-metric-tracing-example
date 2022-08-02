@@ -58,6 +58,8 @@ func main() {
 
 	router.HandleFunc("/api/v1/users", trace.HTTPHandlerFunc(h.FindAll, "controller_user_find_all")).Methods(http.MethodGet)
 	router.HandleFunc("/api/v1/users", trace.HTTPHandlerFunc(h.Save, "controller_user_save")).Methods(http.MethodPost)
+	router.HandleFunc("/api/v1/users/{id}", trace.HTTPHandlerFunc(h.FindByID, "controller_user_find_by_id")).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/users", trace.HTTPHandlerFunc(h.Update, "controller_user_update")).Methods(http.MethodPut)
 	router.HandleFunc("/live", common.LiveReadyProbe)
 	router.HandleFunc("/ready", common.LiveReadyProbe)
 
