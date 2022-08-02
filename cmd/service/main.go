@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/vielendanke/opentracing-example/internal/pkg/sql"
 	"time"
@@ -22,9 +23,9 @@ func main() {
 
 	cfg := trace.ProviderConfig{
 		JaegerEndpoint: os.Getenv("JAEGER_ENDPOINT"),
-		ServiceName:    "users",
-		ServiceVersion: "1.0.0",
-		Environment:    "integ",
+		ServiceName:    os.Getenv("APPLICATION_NAME"),
+		ServiceVersion: os.Getenv("APPLICATION_VERSION"),
+		Environment:    os.Getenv("ENVIRONMENT"),
 		Disabled:       false,
 	}
 	exporter, exporterErr := trace.NewJaegerExporter(os.Getenv("JAEGER_ENDPOINT"))
@@ -63,5 +64,5 @@ func main() {
 	router.HandleFunc("/live", common.LiveReadyProbe)
 	router.HandleFunc("/ready", common.LiveReadyProbe)
 
-	log.Fatalln(http.ListenAndServe(":9090", router))
+	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("CONTAINER_PORT")), router))
 }

@@ -13,6 +13,7 @@ image:
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+environment: "integ"
 
 autoscaling:
   enabled: false
@@ -23,8 +24,12 @@ service:
   type: ClusterIP
   port: 9090
 
+container:
+  port: 9090
+
 jaeger:
   collector:
+    # collector url
     url: 'http://simplest-agent:14268/api/traces'
 
 db:

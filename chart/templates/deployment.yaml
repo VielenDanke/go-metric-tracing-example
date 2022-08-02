@@ -45,13 +45,21 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+            - name: APPLICATION_NAME
+              value: {{ include "chart.name" . }}
+            - name: APPLICATION_VERSION
+              value: {{ include "chart.appVersion" . }}
+            - name: ENVIRONMENT
+              value: {{ .Values.environment }}
+            - name: CONTAINER_PORT
+              value: {{ .Values.container.port }}
             - name: JAEGER_ENDPOINT
               value: {{ .Values.jaeger.collector.url }}
             - name: DATABASE_URL
               value: {{ .Values.db.url }}
           ports:
             - name: http
-              containerPort: 9090
+              containerPort: {{ .Values.container.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
