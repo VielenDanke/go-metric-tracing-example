@@ -52,7 +52,7 @@ spec:
             - name: ENVIRONMENT
               value: {{ .Values.environment }}
             - name: CONTAINER_PORT
-              value: {{ .Values.container.port }}
+              value: '{{ .Values.container.port }}'
             - name: JAEGER_ENDPOINT
               value: {{ .Values.jaeger.collector.url }}
             - name: DATABASE_URL
